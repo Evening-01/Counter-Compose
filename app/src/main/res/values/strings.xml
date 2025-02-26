@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">记账本</string>
+
+    <!-- 标题配置 -->
+    <string name="header_1">213</string>
+    <string name="header_2"> dmsla;mds;almdlksadmsa2</string>
+    <string name="header_3">dhsiasa 3</string>
+</resources>

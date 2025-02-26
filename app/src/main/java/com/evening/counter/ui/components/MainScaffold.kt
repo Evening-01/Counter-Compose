@@ -1,67 +1,103 @@
-package com.evening.counter.ui.components
-
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import com.evening.counter.R
 import com.evening.counter.ui.screen.DataScreen
 import com.evening.counter.ui.screen.SettingsScreen
+import com.evening.counter.ui.theme.dividerColor
 import com.evening.counter.viewmodel.TableViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScaffold(viewModel: TableViewModel) {
     var selectedScreen by remember { mutableStateOf(0) }
-    val items = listOf(
+    val screens = listOf(
         Screen.Data to Icons.Filled.List,
         Screen.Settings to Icons.Filled.Settings
     )
 
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text(stringResource(R.string.app_name)) },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            )
-        },
-        bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
-            ) {
-                items.forEachIndexed { index, (screen, icon) ->
-                    NavigationBarItem(
-                        icon = {
-                            Icon(
-                                imageVector = icon,
-                                contentDescription = stringResource(screen.titleRes)
+    MaterialTheme {
+        Scaffold(
+            topBar = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    TopAppBar(
+                        title = {
+                            Text(
+                                text = stringResource(R.string.app_name),
+                                style = MaterialTheme.typography.titleLarge
                             )
                         },
-                        label = { Text(stringResource(screen.titleRes)) },
-                        selected = selectedScreen == index,
-                        onClick = { selectedScreen = index },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.primary,
-                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            titleContentColor = MaterialTheme.colorScheme.onSurface
+                        ),
+//                        modifier = Modifier.shadow(elevation = 1.dp) // 添加轻微阴影
                     )
                 }
+            },
+            bottomBar = {
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ) {
+                    screens.forEachIndexed { index, (screen, icon) ->
+                        NavigationBarItem(
+                            icon = {
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = stringResource(screen.titleRes),
+                                    tint = if (selectedScreen == index) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                    }
+                                )
+                            },
+                            label = {
+                                Text(
+                                    text = stringResource(screen.titleRes),
+                                    color = if (selectedScreen == index) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                    }
+                                )
+                            },
+                            selected = selectedScreen == index,
+                            onClick = { selectedScreen = index }
+                        )
+                    }
+                }
             }
-        }
-    ) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding)) {
-            when (selectedScreen) {
-                0 -> DataScreen(viewModel = viewModel)
-                1 -> SettingsScreen()
+        ) { innerPadding ->
+            Box(modifier = Modifier.padding(innerPadding)) {
+                when (selectedScreen) {
+                    0 -> DataScreen(viewModel = viewModel)
+                    1 -> SettingsScreen()
+                }
             }
         }
     }

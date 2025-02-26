@@ -1,5 +1,6 @@
 package com.evening.counter.ui
 
+import MainScaffold
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -7,7 +8,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.room.Room
 import com.evening.counter.data.AppDatabase
 import com.evening.counter.repository.TableItemRepository
-import com.evening.counter.ui.components.MainScaffold
 import com.evening.counter.ui.theme.MaterialTheme
 import com.evening.counter.viewmodel.TableViewModel
 
@@ -31,7 +31,7 @@ class MainActivity : ComponentActivity() {
         viewModel.addSampleData()
 
         setContent {
-            MaterialTheme {
+            MaterialTheme (dynamicColor = true) {
                 MainScaffold(viewModel = viewModel)
             }
         }

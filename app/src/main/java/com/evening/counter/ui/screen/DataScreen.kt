@@ -5,12 +5,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.evening.counter.ui.components.AccountingTable
 import com.evening.counter.ui.components.FixedHeaderTable
-import com.evening.counter.viewmodel.TableViewModel
+import com.evening.counter.viewmodel.AccountingViewModel
 
 @Composable
 fun DataScreen(
-    viewModel: TableViewModel,
+    viewModel: AccountingViewModel,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -18,6 +19,6 @@ fun DataScreen(
         contentAlignment = Alignment.Center
     ) {
         // 原有的表格组件
-        FixedHeaderTable(viewModel = viewModel)
+        AccountingTable(viewModel = viewModel)
     }
 }

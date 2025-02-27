@@ -20,5 +20,11 @@
     <string name="header_8">总重量</string>
     <string name="header_9">开票价</string>
     <string name="header_10">总金额</string>
+    <string name="backup_title">备份与恢复</string>
+    <string name="export_db">备份</string>
+    <string name="import_db">恢复</string>
+    <string name="header_date">日期</string>
+    <string name="header_order">单号</string>
+
 
 </resources>

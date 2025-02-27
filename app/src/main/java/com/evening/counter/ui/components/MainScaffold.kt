@@ -31,11 +31,11 @@ import com.evening.counter.R
 import com.evening.counter.ui.screen.DataScreen
 import com.evening.counter.ui.screen.SettingsScreen
 import com.evening.counter.ui.theme.dividerColor
-import com.evening.counter.viewmodel.TableViewModel
+import com.evening.counter.viewmodel.AccountingViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScaffold(viewModel: TableViewModel) {
+fun MainScaffold(viewModel: AccountingViewModel) {
     var selectedScreen by remember { mutableStateOf(0) }
     val screens = listOf(
         Screen.Data to Icons.Filled.List,

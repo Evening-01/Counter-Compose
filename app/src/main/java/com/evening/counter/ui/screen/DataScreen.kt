@@ -6,7 +6,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.evening.counter.ui.components.AccountingTable
-import com.evening.counter.ui.components.FixedHeaderTable
 import com.evening.counter.viewmodel.AccountingViewModel
 
 @Composable

@@ -1,4 +1,6 @@
 import androidx.annotation.StringRes
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -47,7 +49,7 @@ fun MainScaffold(viewModel: TableViewModel) {
                     TopAppBar(
                         title = {
                             Text(
-                                text = stringResource(R.string.app_name),
+                                text = stringResource(screens[selectedScreen].first.titleRes), // 动态设置标题,
                                 style = MaterialTheme.typography.titleLarge
                             )
                         },
@@ -94,9 +96,14 @@ fun MainScaffold(viewModel: TableViewModel) {
             }
         ) { innerPadding ->
             Box(modifier = Modifier.padding(innerPadding)) {
-                when (selectedScreen) {
-                    0 -> DataScreen(viewModel = viewModel)
-                    1 -> SettingsScreen()
+                Crossfade(
+                    targetState = selectedScreen,
+                    animationSpec = tween(durationMillis = 300), label = "动画" // 设置动画持续时间
+                ) { screen ->
+                    when (screen) {
+                        0 -> DataScreen(viewModel = viewModel)
+                        1 -> SettingsScreen()
+                    }
                 }
             }
         }

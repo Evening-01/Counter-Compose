@@ -28,7 +28,7 @@ import com.evening.counter.viewmodel.AccountingViewModel
 
 @Composable
 fun AccountingTable(
-    viewModel: AccountingViewModel,
+    items: List<AccountingViewModel.UiModel>,
     modifier: Modifier = Modifier
 ) {
     val horizontalScroll = rememberScrollState()
@@ -43,7 +43,7 @@ fun AccountingTable(
                 .fillMaxSize()
                 .horizontalScroll(horizontalScroll)
         ) {
-            items(viewModel.items.value) { item ->
+            items(items) { item ->
                 DataRow(item = item)
                 Divider(
                     color = MaterialTheme.colorScheme.outlineVariant,

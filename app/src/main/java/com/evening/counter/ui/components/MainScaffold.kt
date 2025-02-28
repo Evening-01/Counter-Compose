@@ -20,6 +20,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -98,11 +99,12 @@ fun MainScaffold(viewModel: AccountingViewModel) {
             Box(modifier = Modifier.padding(innerPadding)) {
                 Crossfade(
                     targetState = selectedScreen,
-                    animationSpec = tween(durationMillis = 300), label = "动画" // 设置动画持续时间
+                    animationSpec = tween(durationMillis = 300),
+                    label = "ScreenTransitions"
                 ) { screen ->
                     when (screen) {
-                        0 -> DataScreen(viewModel = viewModel)
-                        1 -> SettingsScreen()
+                        0 -> key("DataScreen") { DataScreen(viewModel = viewModel) }
+                        1 -> key("SettingsScreen") { SettingsScreen() }
                     }
                 }
             }

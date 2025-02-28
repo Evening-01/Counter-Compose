@@ -22,7 +22,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme (dynamicColor = true) {
                 val viewModel: AccountingViewModel = hiltViewModel()
-                viewModel.insertTestData()
                 MainScaffold(viewModel = viewModel)
             }
         }

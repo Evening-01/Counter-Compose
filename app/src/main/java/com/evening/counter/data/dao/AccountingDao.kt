@@ -1,6 +1,5 @@
 package com.evening.counter.data.dao
 
-// data/dao/AccountingDao.kt
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
@@ -13,5 +12,5 @@ interface AccountingDao {
     suspend fun insert(item: AccountingItem)
 
     @Query("SELECT * FROM accounting_items ORDER BY date DESC")
-    fun getAllItems(): Flow<List<AccountingItem>>
+    fun getAllItems(): Flow<List<AccountingItem>>  // 确保返回Flow类型
 }

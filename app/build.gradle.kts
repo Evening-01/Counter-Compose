@@ -88,6 +88,8 @@ dependencies {
     implementation("com.google.dagger:hilt-android:2.48")
     kapt("com.google.dagger:hilt-compiler:2.48")
 
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.2")
+
 
 
     // 测试

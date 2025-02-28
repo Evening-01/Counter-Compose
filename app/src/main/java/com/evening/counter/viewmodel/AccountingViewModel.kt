@@ -12,6 +12,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -26,6 +27,9 @@ class AccountingViewModel @Inject constructor(
     private val _items = MutableStateFlow<List<UiModel>>(emptyList())
     val items: StateFlow<List<UiModel>> = _items
 
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> = _isLoading
+
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
@@ -34,10 +38,19 @@ class AccountingViewModel @Inject constructor(
     }
 
     private fun loadItems() {
-        viewModelScope.launch {
-            repository.getAllItems().collect { dbItems ->
-                _items.value = dbItems.map { it.toUiModel() }
-            }
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.getAllItems()
+                .map { dbItems ->
+                    dbItems.map { it.toUiModel() }
+                }
+                .catch { e ->
+                    _errorMessage.value = "数据加载失败: ${e.localizedMessage}"
+                    _isLoading.value = false
+                }
+                .collect { items ->
+                    _items.value = items
+                    _isLoading.value = false
+                }
         }
     }
 

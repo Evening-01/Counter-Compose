@@ -2,6 +2,7 @@ package com.evening.counter.viewmodel
 
 // viewmodel/AccountingViewModel.kt
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.evening.counter.data.entity.AccountingItem
@@ -32,6 +33,15 @@ class AccountingViewModel @Inject constructor(
 
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
+
+    val _showAddDialog = MutableStateFlow(false)
+    val showAddDialog: StateFlow<Boolean> = _showAddDialog
+
+    // 日期选择状态（使用Long存储时间戳）
+    val selectedDate = mutableStateOf(System.currentTimeMillis())
+
+    // 日期弹窗可见性
+    val showDatePicker = mutableStateOf(false)
 
     init {
         loadItems()
@@ -65,6 +75,24 @@ class AccountingViewModel @Inject constructor(
         }
     }
 
+    fun onDateSelected(millis: Long) {
+        selectedDate.value = millis
+        showDatePicker.value = false
+    }
+
+    // 保存新条目
+    fun saveItem(item: AccountingItem) {
+        viewModelScope.launch {
+            try {
+                validateItem(item)
+                repository.addItem(item)
+                _showAddDialog.value = false
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "保存失败"
+            }
+        }
+    }
+
     private fun validateItem(item: AccountingItem) {
         when {
             item.orderNumber.isBlank() -> throw IllegalArgumentException("单号不能为空")
@@ -73,6 +101,10 @@ class AccountingViewModel @Inject constructor(
             item.totalBundles <= 0 -> throw IllegalArgumentException("捆数必须大于0")
             item.unitPrice <= 0 -> throw IllegalArgumentException("单价必须大于0")
         }
+    }
+
+    fun setErrorMessage(message: String) {
+        _errorMessage.value = message
     }
 
     fun clearError() {

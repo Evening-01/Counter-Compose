@@ -1,6 +1,5 @@
 package com.evening.counter.ui.screen
 
-import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,7 +21,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.evening.counter.R
 import com.evening.counter.ui.components.AccountingTable
+import com.evening.counter.ui.components.AddEditDialog
 import com.evening.counter.viewmodel.AccountingViewModel
+import androidx.compose.runtime.collectAsState
+
 
 @Composable
 fun DataScreen(
@@ -32,6 +34,7 @@ fun DataScreen(
     val items by viewModel.items.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val context = LocalContext.current // 获取 Context
+    val showAddDialog by viewModel.showAddDialog.collectAsState()
 
     Box(
         modifier = modifier.fillMaxSize(),
@@ -47,8 +50,9 @@ fun DataScreen(
         // 添加FAB
         FloatingActionButton(
             onClick = {
-                Toast.makeText(context, "FAB clicked", Toast.LENGTH_SHORT).show()
-                viewModel.insertTestData()
+//                Toast.makeText(context, "FAB clicked", Toast.LENGTH_SHORT).show()
+//                viewModel.insertTestData()
+                viewModel._showAddDialog.value = true
             },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
@@ -58,6 +62,13 @@ fun DataScreen(
             Icon(
                 imageVector = Icons.Default.Add,
                 contentDescription = "添加新记录"
+            )
+        }
+
+        if (showAddDialog) {
+            AddEditDialog(
+                viewModel = viewModel,
+                onDismiss = { viewModel._showAddDialog.value = false }
             )
         }
     }

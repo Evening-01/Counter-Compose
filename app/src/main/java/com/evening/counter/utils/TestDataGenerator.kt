@@ -1,6 +1,5 @@
 package com.evening.counter.utils
 
-// utils/TestDataGenerator.kt
 import com.evening.counter.data.entity.AccountingItem
 import java.text.SimpleDateFormat
 import java.util.*

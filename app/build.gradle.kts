@@ -82,7 +82,6 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
 
     implementation("androidx.navigation:navigation-compose:2.7.7")
-    implementation("androidx.compose.material3:material3:1.1.0")
 
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
     implementation("com.google.dagger:hilt-android:2.48")
@@ -92,6 +91,13 @@ dependencies {
 
     implementation("androidx.compose.runtime:runtime-livedata:1.7.0")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
+
+    // Material 3 日期选择器需要
+    implementation("androidx.compose.material3:material3:1.2.1")
+    implementation("androidx.compose.material3:material3-window-size-class:1.2.1")
+
+// 日期选择器需要
+    implementation("com.google.accompanist:accompanist-pager:0.34.0")
 
 
 

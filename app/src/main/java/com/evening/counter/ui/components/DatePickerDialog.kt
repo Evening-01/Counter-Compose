@@ -7,6 +7,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.evening.counter.viewmodel.AccountingViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -15,8 +17,10 @@ fun CustomDatePicker(
     viewModel: AccountingViewModel,
     onDismiss: () -> Unit
 ) {
+
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val dateState = rememberDatePickerState(
-        initialSelectedDateMillis = viewModel.selectedDate.value
+        initialSelectedDateMillis = uiState.selectedDate
     )
 
     DatePickerDialog(

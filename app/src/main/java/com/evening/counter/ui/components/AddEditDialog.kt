@@ -1,6 +1,5 @@
 package com.evening.counter.ui.components
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -14,10 +13,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.outlined.DateRange
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -26,7 +23,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,19 +31,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.evening.counter.data.entity.AccountingItem
 import com.evening.counter.viewmodel.AccountingViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddEditDialog(
     viewModel: AccountingViewModel,
     onDismiss: () -> Unit
 ) {
-    val errorMessage by viewModel.errorMessage.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var diameter by remember { mutableStateOf("") }
     var thickness by remember { mutableStateOf("") }
     var length by remember { mutableStateOf("") }
@@ -57,9 +53,9 @@ fun AddEditDialog(
     var unitPrice by remember { mutableStateOf("") }
     val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()) }
 
-    // 日期显示文本
-    val dateText = remember(viewModel.selectedDate.value) {
-        dateFormat.format(Date(viewModel.selectedDate.value))
+    // 从ViewModel状态获取日期
+    val dateText = remember(uiState.selectedDate) {
+        dateFormat.format(Date(uiState.selectedDate))
     }
 
     AlertDialog(
@@ -70,26 +66,19 @@ fun AddEditDialog(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                if (!errorMessage.isNullOrEmpty()) {
+                // 显示错误信息
+                uiState.errorMessage?.let { message ->
                     Text(
-                        text = errorMessage!!,
+                        text = message,
                         color = MaterialTheme.colorScheme.error
                     )
                 }
 
-                // 日期选择行
-
-
+                // 日期选择按钮
                 OutlinedButton(
-                    onClick = { viewModel.showDatePicker.value = true },
+                    onClick = { viewModel.toggleDatePicker(true) },
                     shape = MaterialTheme.shapes.medium,
-                    colors = ButtonDefaults.outlinedButtonColors(),
-                    border = ButtonDefaults.outlinedButtonBorder,
-                    // 调整内边距与其他控件对齐
-                    contentPadding = PaddingValues(
-                        horizontal = 16.dp, // 与 TextField 的水平对齐
-                        vertical = 12.dp    // 匹配 TextField 的垂直间距
-                    )
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -97,12 +86,12 @@ fun AddEditDialog(
                         horizontalArrangement = Arrangement.Start
                     ) {
                         Icon(
-                            imageVector = Icons.Outlined.DateRange, // 使用更标准的日历图标
+                            imageVector = Icons.Outlined.DateRange,
                             contentDescription = "选择日期",
-                            modifier = Modifier.size(24.dp),  // 使用标准图标尺寸
+                            modifier = Modifier.size(24.dp),
                             tint = MaterialTheme.colorScheme.primary
                         )
-                        Spacer(Modifier.width(12.dp)) // 与 TextField 的标签间距一致
+                        Spacer(Modifier.width(12.dp))
                         Text(
                             text = "日期: $dateText",
                             style = MaterialTheme.typography.bodyLarge,
@@ -197,7 +186,7 @@ fun AddEditDialog(
                 onClick = {
                     try {
                         val newItem = AccountingItem(
-                            date = Date(),
+                            date = Date(uiState.selectedDate), // 使用状态中的日期
                             orderNumber = orderNumber,
                             diameter = diameter.toDouble(),
                             thickness = thickness.toDouble(),
@@ -207,31 +196,28 @@ fun AddEditDialog(
                             unitPrice = unitPrice.toDouble()
                         )
                         viewModel.saveItem(newItem)
+                        onDismiss()
                     } catch (e: NumberFormatException) {
                         viewModel.setErrorMessage("请输入有效的数值")
                     }
                 },
-                enabled = orderNumber.isNotEmpty() &&
-                        diameter.isNotEmpty() &&
-                        thickness.isNotEmpty() &&
-                        length.isNotEmpty() &&
-                        bundleWeight.isNotEmpty() &&
-                        totalBundles.isNotEmpty() &&
-                        unitPrice.isNotEmpty()
-            ) {
-                Text("保存")
-            }
+                enabled = orderNumber.isNotEmpty() && diameter.isNotEmpty()
+                        && thickness.isNotEmpty() && length.isNotEmpty()
+                        && bundleWeight.isNotEmpty() && totalBundles.isNotEmpty()
+                        && unitPrice.isNotEmpty()
+            ) { Text("保存") }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("取消")
-            }
+            TextButton(onClick = onDismiss) { Text("取消") }
         }
     )
-    if (viewModel.showDatePicker.value) {
+
+    // 日期选择器对话框
+
+    if (uiState.showDatePicker) {
         CustomDatePicker(
             viewModel = viewModel,
-            onDismiss = { viewModel.showDatePicker.value = false }
+            onDismiss = { viewModel.toggleDatePicker(false) }
         )
     }
 }

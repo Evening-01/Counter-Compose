@@ -1,6 +1,5 @@
 package com.evening.counter.ui.screen
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -15,7 +14,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -23,7 +21,6 @@ import com.evening.counter.R
 import com.evening.counter.ui.components.AccountingTable
 import com.evening.counter.ui.components.AddEditDialog
 import com.evening.counter.viewmodel.AccountingViewModel
-import androidx.compose.runtime.collectAsState
 
 
 @Composable
@@ -31,28 +28,39 @@ fun DataScreen(
     viewModel: AccountingViewModel,
     modifier: Modifier = Modifier
 ) {
-    val items by viewModel.items.collectAsStateWithLifecycle()
-    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
-    val context = LocalContext.current // 获取 Context
-    val showAddDialog by viewModel.showAddDialog.collectAsState()
+
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Box(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
 
+
         when {
-            isLoading -> CircularProgressIndicator()
-            items.isEmpty() -> EmptyState()
-            else -> AccountingTable(items = items)
+            uiState.isLoading -> CircularProgressIndicator(Modifier.align(Alignment.Center))
+            uiState.items.isEmpty() -> EmptyState()
+            else -> AccountingTable(
+                items = uiState.items,
+                selectedIds = uiState.selectedIds,
+                onItemClick = { item ->
+                    if (uiState.selectedIds.isEmpty()) {
+                        // 进入编辑逻辑
+                    } else {
+                        viewModel.toggleSelection(item.id)
+                    }
+                },
+                onLongClick = { item ->
+                    viewModel.toggleSelection(item.id)
+                }
+            )
         }
 
         // 添加FAB
         FloatingActionButton(
             onClick = {
-//                Toast.makeText(context, "FAB clicked", Toast.LENGTH_SHORT).show()
-//                viewModel.insertTestData()
-                viewModel._showAddDialog.value = true
+                viewModel.toggleAddDialog(true)
+
             },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
@@ -65,10 +73,10 @@ fun DataScreen(
             )
         }
 
-        if (showAddDialog) {
+        if (uiState.showAddDialog) {
             AddEditDialog(
                 viewModel = viewModel,
-                onDismiss = { viewModel._showAddDialog.value = false }
+                onDismiss = { viewModel.toggleAddDialog(false) }
             )
         }
     }

@@ -2,6 +2,7 @@ package com.evening.counter.viewmodel
 
 // viewmodel/AccountingViewModel.kt
 import android.util.Log
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,10 +14,13 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 import javax.inject.Inject
 
@@ -25,93 +29,24 @@ class AccountingViewModel @Inject constructor(
     private val repository: AccountingRepository
 ) : ViewModel() {
 
-    private val _items = MutableStateFlow<List<UiModel>>(emptyList())
-    val items: StateFlow<List<UiModel>> = _items
+    // UI 状态统一管理
+    data class UiState(
+        val items: List<UiModel> = emptyList(),
+        val isLoading: Boolean = true,
+        val selectedIds: Set<Long> = emptySet(),
+        val filter: FilterState = FilterState(),
+        val errorMessage: String? = null,
+        val showAddDialog: Boolean = false,
+        val showDatePicker: Boolean = false,
+        val selectedDate: Long = System.currentTimeMillis()
+    )
 
-    private val _isLoading = MutableStateFlow(true)
-    val isLoading: StateFlow<Boolean> = _isLoading
+    private val _uiState = MutableStateFlow(UiState())
+    val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
-    private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> = _errorMessage
-
-    val _showAddDialog = MutableStateFlow(false)
-    val showAddDialog: StateFlow<Boolean> = _showAddDialog
-
-    // 日期选择状态（使用Long存储时间戳）
-    val selectedDate = mutableStateOf(System.currentTimeMillis())
-
-    // 日期弹窗可见性
-    val showDatePicker = mutableStateOf(false)
-
-    init {
-        loadItems()
-    }
-
-    private fun loadItems() {
-        viewModelScope.launch(Dispatchers.IO) {
-            repository.getAllItems()
-                .map { dbItems ->
-                    dbItems.map { it.toUiModel() }
-                }
-                .catch { e ->
-                    _errorMessage.value = "数据加载失败: ${e.localizedMessage}"
-                    _isLoading.value = false
-                }
-                .collect { items ->
-                    _items.value = items
-                    _isLoading.value = false
-                }
-        }
-    }
-
-    fun addItem(item: AccountingItem) {
-        viewModelScope.launch {
-            try {
-                validateItem(item)
-                repository.addItem(item)
-            } catch (e: Exception) {
-                _errorMessage.value = e.message ?: "保存失败"
-            }
-        }
-    }
-
-    fun onDateSelected(millis: Long) {
-        selectedDate.value = millis
-        showDatePicker.value = false
-    }
-
-    // 保存新条目
-    fun saveItem(item: AccountingItem) {
-        viewModelScope.launch {
-            try {
-                validateItem(item)
-                repository.addItem(item)
-                _showAddDialog.value = false
-            } catch (e: Exception) {
-                _errorMessage.value = e.message ?: "保存失败"
-            }
-        }
-    }
-
-    private fun validateItem(item: AccountingItem) {
-        when {
-            item.orderNumber.isBlank() -> throw IllegalArgumentException("单号不能为空")
-            item.diameter <= 0 -> throw IllegalArgumentException("直径必须大于0")
-            item.thickness <= 0 -> throw IllegalArgumentException("壁厚必须大于0")
-            item.totalBundles <= 0 -> throw IllegalArgumentException("捆数必须大于0")
-            item.unitPrice <= 0 -> throw IllegalArgumentException("单价必须大于0")
-        }
-    }
-
-    fun setErrorMessage(message: String) {
-        _errorMessage.value = message
-    }
-
-    fun clearError() {
-        _errorMessage.value = null
-    }
-
+    // 业务模型定义
     data class UiModel(
+        val id: Long,
         val date: String,
         val orderNumber: String,
         val diameter: String,
@@ -126,11 +61,147 @@ class AccountingViewModel @Inject constructor(
         val totalAmount: String
     )
 
+    data class FilterState(
+        val startDate: Date = Date(System.currentTimeMillis() - 7 * 24 * 3600 * 1000L),
+        val endDate: Date = Date(),
+        val sortType: SortType = SortType.DATE_DESC,
+        val orderNumberQuery: String = ""
+    )
+
+    enum class SortType { DATE_ASC, DATE_DESC, AMOUNT_ASC, AMOUNT_DESC }
+
+    init {
+        loadItems()
+    }
+
+    /* 状态操作方法示例 */
+    // 加载数据
+    private fun loadItems() {
+        viewModelScope.launch(Dispatchers.IO) {
+            _uiState.update { it.copy(isLoading = true) }
+
+            repository.getAllItems()
+                .map { items -> items.map { it.toUiModel() } }
+                .catch { e ->
+                    _uiState.update {
+                        it.copy(
+                            errorMessage = "加载失败: ${e.localizedMessage}",
+                            isLoading = false
+                        )
+                    }
+                }
+                .collect { items ->
+                    _uiState.update {
+                        it.copy(
+                            items = processFilter(items),
+                            isLoading = false
+                        )
+                    }
+                }
+        }
+    }
+
+    // 切换选中状态
+    fun toggleSelection(itemId: Long) {
+        _uiState.update { state ->
+            val newSelection = if (state.selectedIds.contains(itemId)) {
+                state.selectedIds - itemId
+            } else {
+                state.selectedIds + itemId
+            }
+            state.copy(selectedIds = newSelection)
+        }
+    }
+
+    fun toggleDatePicker(show: Boolean) {
+        _uiState.update { it.copy(showDatePicker = show) }
+    }
+
+    fun setErrorMessage(message: String?) {
+        _uiState.update { it.copy(errorMessage = message) }
+    }
+
+    fun saveItem(item: AccountingItem) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                repository.addItem(item)
+                _uiState.update {
+                    it.copy(
+                        showAddDialog = false,
+                        errorMessage = null
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        errorMessage = "保存失败: ${e.localizedMessage}"
+                    )
+                }
+            }
+        }
+    }
+
+
+    // 删除选中项
+    fun deleteSelected() {
+        viewModelScope.launch {
+            repository.deleteByIds(_uiState.value.selectedIds.toList())
+            _uiState.update { it.copy(selectedIds = emptySet()) }
+            loadItems()
+        }
+    }
+
+    // 应用筛选条件
+    fun applyFilter(filter: FilterState) {
+        _uiState.update { it.copy(filter = filter) }
+        loadItems()
+    }
+
+    // 显示/隐藏对话框
+    fun toggleAddDialog(show: Boolean) {
+        _uiState.update { it.copy(showAddDialog = show) }
+    }
+
+    // 日期选择
+    fun onDateSelected(millis: Long) {
+        _uiState.update {
+            it.copy(
+                selectedDate = millis,
+                showDatePicker = false
+            )
+        }
+    }
+
+    /* 辅助方法 */
+    private fun processFilter(items: List<UiModel>): List<UiModel> {
+        return items
+            .filter { item ->
+                val date = parseDate(item.date)
+                date.time >= _uiState.value.filter.startDate.time &&
+                        date.time <= _uiState.value.filter.endDate.time &&
+                        item.orderNumber.contains(_uiState.value.filter.orderNumberQuery, true)
+            }
+            .sortedWith(
+                when (_uiState.value.filter.sortType) {
+                    SortType.DATE_ASC -> compareBy { parseDate(it.date) }
+                    SortType.DATE_DESC -> compareByDescending { parseDate(it.date) }
+                    SortType.AMOUNT_ASC -> compareBy { it.totalAmount.toDouble() }
+                    SortType.AMOUNT_DESC -> compareByDescending { it.totalAmount.toDouble() }
+                }
+            )
+    }
+
+    private fun parseDate(dateStr: String): Date {
+        return SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(dateStr) ?: Date()
+    }
+
+    // 数据库实体转换
     private fun AccountingItem.toUiModel(): UiModel {
         val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         val piecesPerBundle = calculatePiecesPerBundle(diameter)
 
         return UiModel(
+            id = this.id,
             date = dateFormat.format(date),
             orderNumber = orderNumber,
             diameter = "Ø${diameter}mm",
@@ -146,26 +217,9 @@ class AccountingViewModel @Inject constructor(
         )
     }
 
-    private fun calculatePiecesPerBundle(diameter: Double): Int = when {
+    private fun calculatePiecesPerBundle(diameter: Double) = when {
         diameter <= 50 -> 10
         diameter <= 80 -> 5
         else -> 2
     }
-
-    // 添加测试数据方法
-    fun insertTestData() {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val testItems = TestDataGenerator.generateTestItems()
-                testItems.forEach { repository.addItem(it) }
-                Log.d("TestData", "成功插入 ${testItems.size} 条测试数据")
-            } catch (e: Exception) {
-                Log.e("TestData", "插入测试数据失败", e)
-                _errorMessage.value = "测试数据插入失败: ${e.localizedMessage}"
-            }
-        }
-    }
-
-
-
 }

@@ -25,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.evening.counter.R
 import com.evening.counter.ui.screen.DataScreen
 import com.evening.counter.ui.screen.SettingsScreen
@@ -38,6 +39,7 @@ fun MainScaffold(viewModel: AccountingViewModel) {
         Screen.Data to Icons.Filled.List,
         Screen.Settings to Icons.Filled.Settings
     )
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     MaterialTheme {
         Scaffold(
@@ -46,7 +48,10 @@ fun MainScaffold(viewModel: AccountingViewModel) {
                     TopAppBar(
                         title = {
                             Text(
-                                text = stringResource(screens[selectedScreen].first.titleRes), // 动态设置标题,
+                                text = when {
+                                    state.selectedIds.isNotEmpty() -> "已选择 ${state.selectedIds.size} 项"
+                                    else -> stringResource(screens[selectedScreen].first.titleRes)
+                                },
                                 style = MaterialTheme.typography.titleLarge
                             )
                         },

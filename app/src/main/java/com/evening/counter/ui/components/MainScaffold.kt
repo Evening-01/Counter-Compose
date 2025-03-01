@@ -23,7 +23,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -133,8 +132,8 @@ fun MainScaffold(viewModel: AccountingViewModel) {
                     label = "ScreenTransitions"
                 ) { screen ->
                     when (screen) {
-                        0 -> key("DataScreen") { DataScreen(viewModel = viewModel) }
-                        1 -> key("SettingsScreen") { SettingsScreen() }
+                        0 -> DataScreen(viewModel = viewModel)
+                        1 -> SettingsScreen()
                     }
                 }
             }

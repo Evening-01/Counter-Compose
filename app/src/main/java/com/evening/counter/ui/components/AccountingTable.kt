@@ -1,6 +1,5 @@
 package com.evening.counter.ui.components
 
-// components/AccountingTable.kt
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background

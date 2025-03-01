@@ -38,6 +38,7 @@ class AccountingViewModel @Inject constructor(
         val errorMessage: String? = null,
         val showAddDialog: Boolean = false,
         val showDatePicker: Boolean = false,
+        val showFilterSheet: Boolean = false,
         val selectedDate: Long = System.currentTimeMillis()
     )
 
@@ -115,6 +116,10 @@ class AccountingViewModel @Inject constructor(
 
     fun toggleDatePicker(show: Boolean) {
         _uiState.update { it.copy(showDatePicker = show) }
+    }
+
+    fun toggleFilterSheet(show: Boolean) {
+        _uiState.value = _uiState.value.copy(showFilterSheet = show)
     }
 
     fun setErrorMessage(message: String?) {

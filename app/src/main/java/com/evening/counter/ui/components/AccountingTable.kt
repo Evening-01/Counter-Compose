@@ -45,12 +45,15 @@ fun AccountingTable(
     onLongClick: (AccountingViewModel.UiModel) -> Unit
 ) {
     val horizontalScroll = rememberScrollState()
+    val showCheckboxes = selectedIds.isNotEmpty()
 
     Column(modifier = modifier.fillMaxSize()) {
-        // 固定表头
-        HeaderRow(scrollState = horizontalScroll)
+        // 表头根据 Checkbox 显示状态添加占位
+        HeaderRow(
+            scrollState = horizontalScroll,
+            showCheckboxes = showCheckboxes
+        )
 
-        // 表格内容
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -60,8 +63,9 @@ fun AccountingTable(
                 DataRow(
                     item = item,
                     selected = selectedIds.contains(item.id),
+                    showCheckbox = showCheckboxes, // 传递显示状态
                     onItemClick = { onItemClick(item) },
-                    onLongPress = { onLongClick(item)}
+                    onLongPress = { onLongClick(item) }
                 )
 
                 Divider(
@@ -72,9 +76,11 @@ fun AccountingTable(
         }
     }
 }
-
 @Composable
-private fun HeaderRow(scrollState: ScrollState) {
+private fun HeaderRow(
+    scrollState: ScrollState,
+    showCheckboxes: Boolean // 新增显示状态参数
+) {
     val headers = listOf(
         R.string.header_date,
         R.string.header_order,
@@ -98,6 +104,12 @@ private fun HeaderRow(scrollState: ScrollState) {
             .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        if (showCheckboxes) {
+            HeaderCell(
+                text = "",
+                modifier = Modifier.width(40.dp) // 与 DataRow 中 Checkbox 宽度一致
+            )
+        }
         headers.forEach { resId ->
             HeaderCell(text = stringResource(id = resId))
         }
@@ -109,6 +121,7 @@ private fun HeaderRow(scrollState: ScrollState) {
 private fun DataRow(
     item: AccountingViewModel.UiModel,
     selected: Boolean,
+    showCheckbox: Boolean, // 新增显示状态参数
     onItemClick: () -> Unit,
     onLongPress: () -> Unit
 ) {
@@ -137,15 +150,21 @@ private fun DataRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         // 选中状态指示器
-        Checkbox(
-            checked = selected,
-            onCheckedChange = null,
-            modifier = Modifier.size(24.dp),
-            colors = CheckboxDefaults.colors(
-                checkedColor = MaterialTheme.colorScheme.primary,
-                uncheckedColor = MaterialTheme.colorScheme.outline
+
+        if (showCheckbox) {
+            Checkbox(
+                checked = selected,
+                onCheckedChange = null,
+                modifier = Modifier
+                    .width(40.dp) // 固定宽度确保与表头对齐
+                    .size(24.dp),
+                colors = CheckboxDefaults.colors(
+                    checkedColor = MaterialTheme.colorScheme.primary,
+                    uncheckedColor = MaterialTheme.colorScheme.outline
+                )
             )
-        )
+        }
+
 
         // 数据单元格
         listOf(
@@ -168,11 +187,13 @@ private fun DataRow(
 }
 
 @Composable
-private fun HeaderCell(text: String) {
+private fun HeaderCell(
+    text: String,
+    modifier: Modifier = Modifier // 允许自定义宽度
+) {
     Text(
         text = text,
-        modifier = Modifier
-            .width(120.dp)
+        modifier = modifier.width(120.dp)
             .padding(horizontal = 8.dp),
         style = MaterialTheme.typography.bodyMedium.copy(
             color = MaterialTheme.colorScheme.onSurfaceVariant,

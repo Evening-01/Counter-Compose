@@ -94,7 +94,8 @@ class AccountingViewModel @Inject constructor(
                 .collect { items ->
                     _uiState.update {
                         it.copy(
-                            items = processFilter(items),
+//                            items = processFilter(items),
+                            items = items,
                             isLoading = false
                         )
                     }
@@ -209,7 +210,7 @@ class AccountingViewModel @Inject constructor(
             id = this.id,
             date = dateFormat.format(date),
             orderNumber = orderNumber,
-            diameter = "Ø${diameter}mm",
+            diameter = "Ø ${diameter}mm",
             thickness = "${thickness}mm",
             length = "${length}mm",
             piecesPerBundle = "$piecesPerBundle 支/捆",

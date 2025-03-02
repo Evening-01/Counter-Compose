@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -19,6 +20,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -39,6 +41,7 @@ import com.evening.counter.viewmodel.AccountingViewModel
 @Composable
 fun MainScaffold(viewModel: AccountingViewModel) {
     var selectedScreen by remember { mutableStateOf(0) }
+    var showConfirmDialog by remember { mutableStateOf(false) }
     val screens = listOf(
         Screen.Data to Icons.Filled.List,
         Screen.Settings to Icons.Filled.Settings
@@ -69,10 +72,7 @@ fun MainScaffold(viewModel: AccountingViewModel) {
                             if (selectedScreen == 0) {
                                 if (state.selectedIds.isNotEmpty()) {
                                     IconButton(
-                                        onClick = {
-                                            viewModel.deleteSelected()
-                                            Toast.makeText(context, "删除成功", Toast.LENGTH_SHORT).show()
-                                        }
+                                        onClick = { showConfirmDialog = true }
                                     ) {
                                         Icon(Icons.Default.Delete, "删除")
                                     }
@@ -135,6 +135,34 @@ fun MainScaffold(viewModel: AccountingViewModel) {
                         0 -> DataScreen(viewModel = viewModel)
                         1 -> SettingsScreen()
                     }
+                }
+
+                if (showConfirmDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showConfirmDialog = false },
+                        title = { Text("确认删除") },
+                        text = { Text("确定要删除选中的 ${state.selectedIds.size} 项记录吗？") },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    viewModel.deleteSelected()
+                                    Toast.makeText(context, "删除成功", Toast.LENGTH_SHORT).show()
+                                    showConfirmDialog = false
+                                }
+                            ) {
+                                Text("确认", color = MaterialTheme.colorScheme.primary)
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(
+                                onClick = { showConfirmDialog = false }
+                            ) {
+                                Text("取消", color = MaterialTheme.colorScheme.onSurface)
+                            }
+                        },
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        textContentColor = MaterialTheme.colorScheme.onSurface
+                    )
                 }
             }
         }

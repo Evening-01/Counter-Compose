@@ -1,5 +1,7 @@
 package com.evening.counter.repository
 
+import android.content.Context
+import android.net.Uri
 import com.evening.counter.data.entity.AccountingItem
 import kotlinx.coroutines.flow.Flow
 import java.util.Date
@@ -10,5 +12,7 @@ interface AccountingRepository {
     suspend fun delete(item: AccountingItem)
     suspend fun update(item: AccountingItem)
     suspend fun deleteByIds(ids: List<Long>)
+    suspend fun exportData(context: Context, uri: Uri)
+    suspend fun importData(context: Context, uri: Uri)
     fun getItemsByDateRange(start: Date, end: Date): Flow<List<AccountingItem>>
 }

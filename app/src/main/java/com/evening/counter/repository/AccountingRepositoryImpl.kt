@@ -1,15 +1,22 @@
 package com.evening.counter.repository
 
+import android.content.Context
+import android.net.Uri
+import androidx.room.withTransaction
+import com.evening.counter.data.AppDatabase
 import com.evening.counter.data.dao.AccountingDao
 import com.evening.counter.data.entity.AccountingItem
+import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
+import java.io.IOException
 import java.util.Date
 import javax.inject.Inject
 
 class AccountingRepositoryImpl @Inject constructor(
-    private val dao: AccountingDao
+    private val dao: AccountingDao,
+    private val database: AppDatabase
 ) : AccountingRepository {
     // 获取所有条目
     override fun getAllItems() = dao.getAllItems().flowOn(Dispatchers.IO)
@@ -28,5 +35,35 @@ class AccountingRepositoryImpl @Inject constructor(
     // 按日期范围查询
     override fun getItemsByDateRange(start: Date, end: Date): Flow<List<AccountingItem>> {
         return dao.getItemsByDateRange(start, end).flowOn(Dispatchers.IO)
+    }
+
+    override suspend fun exportData(context: Context, uri: Uri) {
+        try {
+            val items = dao.getAllForExport()
+            val json = Gson().toJson(items)
+            context.contentResolver.openOutputStream(uri)?.use {
+                it.write(json.toByteArray())
+            }
+        } catch (e: Exception) {
+            throw e
+        }
+    }
+
+    override suspend fun importData(context: Context, uri: Uri) {
+        try {
+            val json = context.contentResolver.openInputStream(uri)?.use {
+                it.bufferedReader().readText()
+            } ?: throw IOException("文件读取失败")
+
+            val items = Gson().fromJson(json, Array<AccountingItem>::class.java).toList()
+
+            // 使用协程事务
+            database.withTransaction {
+                dao.deleteAll()
+                items.forEach { dao.insert(it) }
+            }
+        } catch (e: Exception) {
+            throw e
+        }
     }
 }

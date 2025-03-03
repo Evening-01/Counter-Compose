@@ -1,7 +1,9 @@
 package com.evening.counter.viewmodel
 
-// viewmodel/AccountingViewModel.kt
+import android.content.Context
+import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -200,6 +202,33 @@ class AccountingViewModel @Inject constructor(
     private fun parseDate(dateStr: String): Date {
         return SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(dateStr) ?: Date()
     }
+
+    fun exportData(context: Context, uri: Uri) {
+        viewModelScope.launch {
+            try {
+                repository.exportData(context, uri)
+                showToast(context, "导出成功")
+            } catch (e: Exception) {
+                showToast(context, "导出失败: ${e.message}")
+            }
+        }
+    }
+
+    fun importData(context: Context, uri: Uri) {
+        viewModelScope.launch {
+            try {
+                repository.importData(context, uri)
+                showToast(context, "导入成功")
+            } catch (e: Exception) {
+                showToast(context, "导入失败: ${e.message}")
+            }
+        }
+    }
+
+    private fun showToast(context: Context, message: String) {
+        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+    }
+
 
     // 数据库实体转换
     private fun AccountingItem.toUiModel(): UiModel {

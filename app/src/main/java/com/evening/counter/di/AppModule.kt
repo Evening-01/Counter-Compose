@@ -24,7 +24,7 @@ object AppModule {
         return Room.databaseBuilder(
             context,
             AppDatabase::class.java,
-            "accounting-db"
+            "accounting_db"
         ).build()
     }
 
@@ -35,7 +35,13 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideAccountingRepository(dao: AccountingDao): AccountingRepository {
-        return AccountingRepositoryImpl(dao)
+    fun provideAccountingRepository(
+        dao: AccountingDao,          // 第一个参数
+        database: AppDatabase        // 新增的第二个参数
+    ): AccountingRepository {
+        return AccountingRepositoryImpl(
+            dao = dao,               // 注入 DAO
+            database = database      // 注入数据库实例
+        )
     }
 }

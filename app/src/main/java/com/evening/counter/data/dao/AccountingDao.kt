@@ -17,6 +17,12 @@ interface AccountingDao {
     @Query("SELECT * FROM accounting_items ORDER BY date DESC")
     fun getAllItems(): Flow<List<AccountingItem>>  // 确保返回Flow类型
 
+    @Query("DELETE FROM accounting_items")
+    suspend fun deleteAll()
+
+    @Query("SELECT * FROM accounting_items")
+    suspend fun getAllForExport(): List<AccountingItem>
+
     @Delete
     suspend fun delete(item: AccountingItem)
 

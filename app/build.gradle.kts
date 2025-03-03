@@ -1,4 +1,3 @@
-// 修改后的 build.gradle
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -70,6 +69,7 @@ dependencies {
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.lifecycle.runtime.compose.android)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
@@ -98,6 +98,8 @@ dependencies {
 
 // 日期选择器需要
     implementation("com.google.accompanist:accompanist-pager:0.34.0")
+
+    implementation("com.google.code.gson:gson:2.10.1")
 
 
 

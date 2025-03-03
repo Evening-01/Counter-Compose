@@ -3,10 +3,10 @@ name: Android Build
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     branches:
-      - master
+      - main
   workflow_dispatch:
 
 jobs:
@@ -32,6 +32,7 @@ jobs:
       - name: Upload APK to Release
         uses: ncipollo/release-action@v1
         with:
+          token: ${{ secrets.RELEASE_TOKEN }}
           tag: latest
           name: Latest Build
           body: Automatically published build for commit ${{ github.sha }}
